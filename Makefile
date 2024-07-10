@@ -8,6 +8,7 @@ include .envs/.mlflow-dev
 include .envs/.infrastructure
 export
 
+
 SHELL = /usr/bin/env bash
 USER_NAME = $(shell whoami)
 USER_ID = $(shell id -u)
@@ -20,7 +21,7 @@ else
 endif
 
 PROD_SERVICE_NAME = app-prod
-PROD_CONTAINER_NAME = abhishek-model-prod-container
+PROD_CONTAINER_NAME = cybulde-model-prod-container
 PROD_PROFILE_NAME = prod
 
 ifeq (, $(shell which nvidia-smi))
@@ -33,11 +34,14 @@ else
 	SERVICE_NAME = app-dev
 endif
 
-
-DIRS_TO_VALIDATE = abhishek
+DIRS_TO_VALIDATE = cybulde
 DOCKER_COMPOSE_RUN = $(DOCKER_COMPOSE_COMMAND) run --rm $(SERVICE_NAME)
 DOCKER_COMPOSE_EXEC = $(DOCKER_COMPOSE_COMMAND) exec $(SERVICE_NAME)
 
+DOCKER_COMPOSE_RUN_PROD = $(DOCKER_COMPOSE_COMMAND) run --rm $(PROD_SERVICE_NAME)
+DOCKER_COMPOSE_EXEC_PROD = $(DOCKER_COMPOSE_COMMAND) exec $(PROD_SERVICE_NAME)
+
+IMAGE_TAG := $(shell echo "train-$$(uuidgen)")
 export
 
 
