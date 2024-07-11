@@ -42,16 +42,26 @@ DOCKER_COMPOSE_RUN_PROD = $(DOCKER_COMPOSE_COMMAND) run --rm $(PROD_SERVICE_NAME
 DOCKER_COMPOSE_EXEC_PROD = $(DOCKER_COMPOSE_COMMAND) exec $(PROD_SERVICE_NAME)
 
 IMAGE_TAG := $(shell echo "train-$$(uuidgen)")
-export
-
 
 # Returns true if the stem is a non-empty environment variable, or else raises an error.
 guard-%:
 	@#$(or ${$*}, $(error $* is not set))
 
-## run-task
-local-run-task: up
-	$(DOCKER_COMPOSE_EXEC) python ./abhishek/run_task.py
+## Generate final config. For overrides use: OVERRIDES=<overrides>
+generate-final-config: up-prod
+	@$(DOCKER_COMPOSE_EXEC_PROD) python cybulde/generate_final_config.py docker_image=${GCP_DOCKER_REGISTRY_URL}:${IMAGE_TAG} ${OVERRIDES}
+
+## Generate final config local. For overrides use: OVERRIDES=<overrides>
+local-generate-final-config: up
+	@$(DOCKER_COMPOSE_EXEC) python cybulde/generate_final_config.py ${OVERRIDES}
+
+## Local run tasks
+run-tasks: generate-final-config push
+	$(DOCKER_COMPOSE_EXEC_PROD) python cybulde/launch_job_on_gcp.py
+
+## Local run tasks
+local-run-tasks: local-generate-final-config
+	$(DOCKER_COMPOSE_EXEC) torchrun cybulde/run_tasks.py
 
 ## Starts jupyter lab
 notebook: up
@@ -90,7 +100,7 @@ test: up
 
 ## Perform a full check
 full-check: lint check-type-annotations
-	$(DOCKER_COMPOSE_EXEC) pytest --cov --cov-report xml --verbose
+	$(DOCKER_COMPOSE_EXEC) pytesta --cov --cov-report xml --verbose
 
 ## Builds docker image
 build:
@@ -107,7 +117,17 @@ lock-dependencies: build-for-dependencies
 
 ## Starts docker containers using "docker-compose up -d"
 up:
-	$(DOCKER_COMPOSE_COMMAND) up -d
+ifeq (, $(shell docker ps -a | grep $(CONTAINER_NAME)))
+	@make down
+endif
+	@$(DOCKER_COMPOSE_COMMAND) --profile $(PROFILE) up -d --remove-orphans
+
+## Starts prod docker containers
+up-prod:
+ifeq (, $(shell docker ps -a | grep $(PROD_CONTAINER_NAME)))
+	@make down
+endif
+	@$(DOCKER_COMPOSE_COMMAND) --profile $(PROD_PROFILE_NAME) up -d --remove-orphans
 
 ## docker-compose down
 down:
@@ -117,9 +137,25 @@ down:
 exec-in: up
 	docker exec -it $(CONTAINER_NAME) bash
 
+push: guard-IMAGE_TAG build
+	@gcloud auth configure-docker --quiet europe-west4-docker.pkg.dev
+	@docker tag "$${DOCKER_IMAGE_NAME}:latest" "$${GCP_DOCKER_REGISTRY_URL}:$${IMAGE_TAG}"
+	@docker push "$${GCP_DOCKER_REGISTRY_URL}:$${IMAGE_TAG}"
+
+## Run ssh tunnel for MLFlow
+mlflow-ssh-tunnel:
+	gcloud compute ssh "$${VM_NAME}" --zone "$${ZONE}" --tunnel-through-iap -- -N -L "$${PROD_MLFLOW_SERVER_PORT}:localhost:$${PROD_MLFLOW_SERVER_PORT}"
+
+## Clean MLFlow volumes
+clean-mlflow-volumes: down
+	docker volume rm cybulde-model_postgresql-mlflow-data cybulde-model_mlflow-artifact-store
+
+## Deploy etcd server on GCE
+deploy-etcd-server:
+	chmod +x ./scripts/deploy-etcd-server.sh
+	./scripts/deploy-etcd-server.sh
+
 .DEFAULT_GOAL := help
-
-
 
 # Inspired by <http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html>
 # sed script explained:
@@ -175,7 +211,3 @@ help:
 		printf "\n"; \
 	}' \
 	| more $(shell test $(shell uname) = Darwin && echo '--no-init --raw-control-chars')
-
-
-
-
