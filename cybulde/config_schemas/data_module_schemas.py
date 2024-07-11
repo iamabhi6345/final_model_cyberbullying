@@ -45,7 +45,7 @@ class ScrappedDataTextClassificationDataModuleConfig(TextClassificationDataModul
 
 
 def setup_config() -> None:
-    # transformation_schemas.setup_config()
+    transformation_schemas.setup_config()
 
     cs = ConfigStore.instance()
     cs.store(
