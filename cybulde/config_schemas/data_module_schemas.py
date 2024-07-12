@@ -4,12 +4,11 @@ from hydra.core.config_store import ConfigStore
 from omegaconf import MISSING, SI
 
 from cybulde.config_schemas.models import transformation_schemas
-# from cybulde.utils.mixins import LoggableParamsMixin
+from cybulde.utils.mixins import LoggableParamsMixin
 
 
 @dataclass
-# class DataModuleConfig(LoggableParamsMixin):
-class DataModuleConfig():
+class DataModuleConfig(LoggableParamsMixin):
     _target_: str = MISSING
     batch_size: int = MISSING
     shuffle: bool = False

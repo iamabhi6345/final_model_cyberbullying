@@ -5,7 +5,7 @@ from omegaconf import MISSING
 from pydantic.dataclasses import dataclass
 
 from cybulde.config_schemas import base_schemas
-from cybulde.config_schemas.evaluation import evaluation_task_schemas, model_selector_schemas
+# from cybulde.config_schemas.evaluation import evaluation_task_schemas, model_selector_schemas
 from cybulde.config_schemas.infrastructure import infrastructure_schema
 from cybulde.config_schemas.training import training_task_schemas
 
