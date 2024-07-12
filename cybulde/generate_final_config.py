@@ -40,5 +40,8 @@ def generate_final_config(config: "Config", dict_config: DictConfig) -> None:
         log_artifacts_for_reproducibility()
 
 
+
+
+
 if __name__ == "__main__":
     generate_final_config()
