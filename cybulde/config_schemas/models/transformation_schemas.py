@@ -26,7 +26,7 @@ class HuggingFaceTokenizationTransformationConfig(TransformationConfig):
 
 @dataclass
 class CustomHuggingFaceTokenizationTransformationConfig(HuggingFaceTokenizationTransformationConfig):
-    pretrained_tokenizer_name_or_path: str = "gs://emkademy/cybulde/data/processed/rebalanced_splits/trained_tokenizer"
+    pretrained_tokenizer_name_or_path: str = "gs://buckets45/data/processed/default_run/trained_tokenizer"
     max_sequence_length: int = 200
 
 
