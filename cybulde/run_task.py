@@ -10,10 +10,10 @@ from cybulde.utils.utils import get_logger
 @get_config(config_path="./configs/autoatically_generated", config_name="config",to_object=false,return_dict_config=True)
 def entrypoint(config: Config) -> None:
     
-    # print("\n\n\n")
-    # print(OmegaConf.to_yaml(config))
-    # print("\n\n")
-    # exit(0)
+    print("\n\n\n")
+    print(OmegaConf.to_yaml(config))
+    print("\n\n")
+    exit(0)
     
     
     logger = get_logger(__file__)  
